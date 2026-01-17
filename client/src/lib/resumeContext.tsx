@@ -122,6 +122,7 @@ interface ResumeContextType {
   currentResumeId: string;
   setCurrentResumeId: (id: string) => void;
   applyTemplate: (templateId: string) => void;
+  atsScore: number;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -135,6 +136,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const [currentResumeId, setCurrentResumeId] = useState('1');
 
   const resume = resumes.find((r) => r.id === currentResumeId) || defaultResume;
+
+  const calculateAtsScore = (data: ResumeData) => {
+    let score = 0;
+    if (data.personalInfo.fullName) score += 10;
+    if (data.personalInfo.email) score += 5;
+    if (data.summary) score += 15;
+    if (data.experience.length > 0) score += 30;
+    if (data.education.length > 0) score += 20;
+    if (data.skills.technical.length > 0) score += 20;
+    return Math.min(score, 100);
+  };
+
+  const atsScore = calculateAtsScore(resume);
 
   const setResume = (newResume: ResumeData) => {
     setResumes((prev) => prev.map((r) => (r.id === newResume.id ? newResume : r)));
@@ -183,6 +197,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         currentResumeId,
         setCurrentResumeId,
         applyTemplate,
+        atsScore,
       }}
     >
       {children}
