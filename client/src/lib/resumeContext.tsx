@@ -38,6 +38,7 @@ export interface Skills {
 export interface ResumeData {
   id: string;
   name: string;
+  templateId: string;
   personalInfo: {
     fullName: string;
     email: string;
@@ -56,6 +57,7 @@ export interface ResumeData {
 const defaultResume: ResumeData = {
   id: '1',
   name: 'My Resume',
+  templateId: '1',
   personalInfo: {
     fullName: 'John Anderson',
     email: 'john.anderson@email.com',
@@ -76,16 +78,6 @@ const defaultResume: ResumeData = {
       endDate: '2018',
       gpa: '3.9',
     },
-    {
-      id: '2',
-      school: 'UC Berkeley',
-      degree: 'Bachelor of Science',
-      field: 'Computer Science',
-      location: 'Berkeley, CA',
-      startDate: '2012',
-      endDate: '2016',
-      gpa: '3.7',
-    },
   ],
   experience: [
     {
@@ -98,20 +90,6 @@ const defaultResume: ResumeData = {
       bullets: [
         'Led development of microservices architecture serving 10M+ daily users',
         'Reduced API response times by 40% through optimization and caching strategies',
-        'Mentored team of 5 junior developers, improving code quality by 25%',
-      ],
-    },
-    {
-      id: '2',
-      company: 'StartupXYZ',
-      title: 'Software Engineer',
-      location: 'San Francisco, CA',
-      startDate: 'Jun 2018',
-      endDate: 'Dec 2020',
-      bullets: [
-        'Built real-time collaboration features using WebSocket technology',
-        'Implemented CI/CD pipelines reducing deployment time by 60%',
-        'Developed RESTful APIs consumed by mobile and web applications',
       ],
     },
   ],
@@ -122,13 +100,6 @@ const defaultResume: ResumeData = {
       issuer: 'Amazon Web Services',
       date: '2023',
       url: 'https://aws.amazon.com/certification/',
-    },
-    {
-      id: '2',
-      name: 'Google Cloud Professional',
-      issuer: 'Google',
-      date: '2022',
-      url: 'https://cloud.google.com/certification',
     },
   ],
   skills: {
@@ -150,6 +121,7 @@ interface ResumeContextType {
   resumes: ResumeData[];
   currentResumeId: string;
   setCurrentResumeId: (id: string) => void;
+  applyTemplate: (templateId: string) => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -157,8 +129,8 @@ const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const [resumes, setResumes] = useState<ResumeData[]>([
     defaultResume,
-    { ...defaultResume, id: '2', name: 'Technical Resume', personalInfo: { ...defaultResume.personalInfo, fullName: 'John Anderson' } },
-    { ...defaultResume, id: '3', name: 'Creative Resume', personalInfo: { ...defaultResume.personalInfo, fullName: 'John Anderson' } },
+    { ...defaultResume, id: '2', name: 'Technical Resume', templateId: '1' },
+    { ...defaultResume, id: '3', name: 'Creative Resume', templateId: '2' },
   ]);
   const [currentResumeId, setCurrentResumeId] = useState('1');
 
@@ -192,6 +164,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResume({ ...resume, skills });
   };
 
+  const applyTemplate = (templateId: string) => {
+    setResume({ ...resume, templateId });
+  };
+
   return (
     <ResumeContext.Provider
       value={{
@@ -206,6 +182,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         resumes,
         currentResumeId,
         setCurrentResumeId,
+        applyTemplate,
       }}
     >
       {children}
