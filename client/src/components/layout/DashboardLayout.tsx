@@ -152,15 +152,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-slate-800" />
-                  <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400">
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/dashboard/settings/account')}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400"
+                  >
                     <Settings className="w-4 h-4" />
                     <span className="font-bold text-xs tracking-tight">Account Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400">
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/dashboard/settings/privacy')}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400"
+                  >
                     <Shield className="w-4 h-4" />
                     <span className="font-bold text-xs tracking-tight">Privacy & Security</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400">
+                  <DropdownMenuItem 
+                    onClick={() => setLocation('/dashboard/settings/billing')}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl focus:bg-slate-800 focus:text-white cursor-pointer text-slate-400"
+                  >
                     <CreditCard className="w-4 h-4" />
                     <span className="font-bold text-xs tracking-tight">Billing & Plans</span>
                   </DropdownMenuItem>
