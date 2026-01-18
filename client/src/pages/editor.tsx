@@ -19,29 +19,46 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Exporting high-quality PDF...');
+    const toastId = toast.loading('Generating full-width A4 PDF...');
+    
     try {
       const element = previewRef.current;
+      
+      // Temporarily remove transform for high-quality capture
+      const originalTransform = element.style.transform;
+      element.style.transform = 'none';
+      
       const canvas = await html2canvas(element, { 
         scale: 2, 
         useCORS: true, 
         backgroundColor: '#ffffff',
         logging: false,
-        width: 8.5 * 96, // Fixed width in pixels for A4/Letter consistency
-        height: 11 * 96
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        windowWidth: element.offsetWidth,
+        windowHeight: element.offsetHeight
       });
+      
+      // Restore transform
+      element.style.transform = originalTransform;
+      
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ 
         orientation: 'portrait', 
-        unit: 'in', 
-        format: 'letter' 
+        unit: 'mm', 
+        format: 'a4' 
       });
-      pdf.addImage(imgData, 'PNG', 0, 0, 8.5, 11);
+      
+      // A4 dimensions in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-      toast.success('Downloaded successfully!', { id: toastId });
+      toast.success('PDF downloaded successfully!', { id: toastId });
     } catch (e) {
       console.error(e);
-      toast.error('Export failed', { id: toastId });
+      toast.error('Export failed. Please try again.', { id: toastId });
     } finally {
       setIsExporting(false);
     }
@@ -70,14 +87,14 @@ export default function EditorPage() {
         <aside className="w-[400px] border-r border-slate-800 bg-slate-900/20 p-6 overflow-y-auto scrollbar-hide shrink-0"><ResumeForm /></aside>
         <main className="flex-1 bg-slate-950 p-12 overflow-auto flex justify-center items-start">
           <div 
-            style={{ 
-              width: `${8.5 * zoom}in`, 
-              height: `${11 * zoom}in`,
-              transition: 'all 0.2s ease-out'
-            }} 
             className="shadow-2xl shadow-black/50 bg-white origin-top"
+            style={{ 
+              width: `${210 * zoom}mm`, 
+              height: `${297 * zoom}mm`,
+              transition: 'all 0.1s ease-out'
+            }}
           >
-            <ResumePreview ref={previewRef} resume={resume} scale={zoom} />
+            <ResumePreview ref={previewRef} resume={resume} scale={(210 * zoom) / 210} />
           </div>
         </main>
       </div>
