@@ -28,6 +28,32 @@ export default function ResumeForm() {
     }]);
   };
 
+  const addAchievement = (expId: string) => {
+    updateExperience(resume.experience.map(exp => 
+      exp.id === expId ? { ...exp, bullets: [...exp.bullets, ''] } : exp
+    ));
+  };
+
+  const updateAchievement = (expId: string, bulletIndex: number, value: string) => {
+    updateExperience(resume.experience.map(exp => {
+      if (exp.id === expId) {
+        const newBullets = [...exp.bullets];
+        newBullets[bulletIndex] = value;
+        return { ...exp, bullets: newBullets };
+      }
+      return exp;
+    }));
+  };
+
+  const removeAchievement = (expId: string, bulletIndex: number) => {
+    updateExperience(resume.experience.map(exp => {
+      if (exp.id === expId) {
+        return { ...exp, bullets: exp.bullets.filter((_, i) => i !== bulletIndex) };
+      }
+      return exp;
+    }));
+  };
+
   const addEducation = () => {
     updateEducation([...resume.education, {
       id: Date.now().toString(), school: '', degree: '', field: '', location: '', startDate: '', endDate: '', gpa: ''
@@ -95,7 +121,16 @@ export default function ResumeForm() {
                   <Input value={exp.startDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, startDate: e.target.value} : x))} placeholder="Start Date" className="border-slate-800" />
                   <Input value={exp.endDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, endDate: e.target.value} : x))} placeholder="End Date" className="border-slate-800" />
                 </div>
-                <Textarea value={exp.bullets.join('\n')} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, bullets: e.target.value.split('\n')} : x))} placeholder="Achievements (one per line)" className="border-slate-800" />
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-[10px] uppercase font-bold">Achievements</Label>
+                  {exp.bullets.map((bullet, bIdx) => (
+                    <div key={bIdx} className="flex gap-2">
+                      <Input value={bullet} onChange={(e) => updateAchievement(exp.id, bIdx, e.target.value)} placeholder={`Achievement ${bIdx + 1}`} className="border-slate-800 flex-1" />
+                      <Button variant="ghost" size="icon" onClick={() => removeAchievement(exp.id, bIdx)} disabled={exp.bullets.length === 1} className="text-red-400"><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" onClick={() => addAchievement(exp.id)} className="text-indigo-400 text-[10px] h-6"><Plus className="w-3 h-3 mr-1" /> Add Achievement</Button>
+                </div>
               </div>
             ))}
             <Button onClick={addExperience} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Experience</Button>
