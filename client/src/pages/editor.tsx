@@ -19,7 +19,7 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Restoring professional PDF with active links...');
+    const toastId = toast.loading('Generating high-quality PDF with active links...');
     
     try {
       const element = previewRef.current;
@@ -28,10 +28,10 @@ export default function EditorPage() {
       const originalTransform = element.style.transform;
       element.style.transform = 'none';
       
-      // Get the bounding box of the element to calculate relative link positions
-      const elementRect = element.getBoundingClientRect();
+      // Get exact dimensions of the element
       const elementWidth = element.offsetWidth;
       const elementHeight = element.offsetHeight;
+      const elementRect = element.getBoundingClientRect();
 
       const canvas = await html2canvas(element, { 
         scale: 2, 
@@ -42,7 +42,7 @@ export default function EditorPage() {
         height: elementHeight
       });
       
-      // Restore transform immediately after capture
+      // Restore transform immediately
       element.style.transform = originalTransform;
       
       const imgData = canvas.toDataURL('image/png');
@@ -59,8 +59,8 @@ export default function EditorPage() {
       // Add the image base layer
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-      // --- HYPERLINK OVERLAY LOGIC ---
-      // Manually add clickable link annotations over the flattened image
+      // --- CRITICAL: MANUAL LINK MAPPING ---
+      // This maps the relative position of <a> tags to the PDF coordinate system
       const links = element.querySelectorAll('a');
       const scaleX = pdfWidth / elementWidth;
       const scaleY = pdfHeight / elementHeight;
@@ -69,6 +69,7 @@ export default function EditorPage() {
         const linkRect = link.getBoundingClientRect();
         
         // Calculate coordinates relative to the preview container
+        // We use the element's actual position during the link query
         const x = (linkRect.left - elementRect.left) * scaleX;
         const y = (linkRect.top - elementRect.top) * scaleY;
         const w = linkRect.width * scaleX;
@@ -78,9 +79,9 @@ export default function EditorPage() {
       });
 
       pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-      toast.success('Professional PDF restored with active links!', { id: toastId });
+      toast.success('Professional PDF with active links ready!', { id: toastId });
     } catch (e) {
-      console.error(e);
+      console.error('PDF Export Error:', e);
       toast.error('Export failed. Please try again.', { id: toastId });
     } finally {
       setIsExporting(false);
