@@ -5,7 +5,6 @@ import ResumeForm from '@/components/resume/ResumeForm';
 import ResumePreview from '@/components/resume/ResumePreview';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, FileText, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 
@@ -19,69 +18,40 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Generating high-quality PDF with active links...');
+    const toastId = toast.loading('Generating sharp PDF with active links...');
     
     try {
       const element = previewRef.current;
       
-      // Temporarily remove transform for high-quality capture
-      const originalTransform = element.style.transform;
-      element.style.transform = 'none';
-      
-      const canvas = await html2canvas(element, { 
-        scale: 2, 
-        useCORS: true, 
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        windowWidth: element.offsetWidth,
-        windowHeight: element.offsetHeight
-      });
-      
-      // Restore transform
-      element.style.transform = originalTransform;
-      
-      const imgData = canvas.toDataURL('image/png');
+      // jsPDF with html() method for native link and text support
       const pdf = new jsPDF({ 
         orientation: 'portrait', 
         unit: 'mm', 
         format: 'a4' 
       });
-      
-      // A4 dimensions in mm
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-      
-      // Add the image as the base layer
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-      // --- LINK PRESERVATION LOGIC ---
-      // We manually add link annotations over the image for functional hyperlinks
-      const links = element.querySelectorAll('a');
-      const rect = element.getBoundingClientRect();
-      const scaleX = pdfWidth / element.offsetWidth;
-      const scaleY = pdfHeight / element.offsetHeight;
-
-      links.forEach((link) => {
-        const linkRect = link.getBoundingClientRect();
-        const parentRect = element.getBoundingClientRect();
-        
-        // Calculate coordinates relative to the preview container
-        const x = (linkRect.left - parentRect.left) * scaleX;
-        const y = (linkRect.top - parentRect.top) * scaleY;
-        const w = linkRect.width * scaleX;
-        const h = linkRect.height * scaleY;
-        
-        pdf.link(x, y, w, h, { url: link.href });
+      // Use the html method to preserve text layers and <a> tags
+      await pdf.html(element, {
+        callback: function (doc) {
+          doc.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
+          toast.success('PDF with active links downloaded!', { id: toastId });
+          setIsExporting(false);
+        },
+        x: 0,
+        y: 0,
+        width: 210, // A4 width in mm
+        windowWidth: 800, // Fixed window width to prevent shrinking and maintain layout
+        autoPaging: 'text',
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: false
+        }
       });
-
-      pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-      toast.success('PDF with clickable links downloaded!', { id: toastId });
     } catch (e) {
       console.error(e);
       toast.error('Export failed. Please try again.', { id: toastId });
-    } finally {
       setIsExporting(false);
     }
   };
