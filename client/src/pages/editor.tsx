@@ -5,6 +5,7 @@ import ResumeForm from '@/components/resume/ResumeForm';
 import ResumePreview from '@/components/resume/ResumePreview';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, FileText, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 
@@ -18,43 +19,72 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Generating text-based PDF with active links...');
+    const toastId = toast.loading('Generating high-quality PDF with clickable links...');
     
     try {
       const element = previewRef.current;
       
-      // jsPDF with html() method for native link and text support
+      // We must capture the element at its natural size for accurate link mapping
+      const originalTransform = element.style.transform;
+      element.style.transform = 'none';
+      
+      // Wait for a tick to ensure the DOM has rendered the unscaled version
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const elementRect = element.getBoundingClientRect();
+      const elementWidth = element.offsetWidth;
+      const elementHeight = element.offsetHeight;
+
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: elementWidth,
+        height: elementHeight
+      });
+      
+      // Restore the preview zoom immediately
+      element.style.transform = originalTransform;
+      
+      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ 
         orientation: 'portrait', 
         unit: 'mm', 
-        format: 'a4',
-        putOnlyUsedFonts: true,
-        floatPrecision: 16
+        format: 'a4' 
+      });
+      
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      // Draw the crisp image onto the PDF
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // --- HYPERLINK OVERLAY ENGINE ---
+      // This is the most stable way to preserve links without distorting the layout
+      const links = element.querySelectorAll('a');
+      const scaleX = pdfWidth / elementWidth;
+      const scaleY = pdfHeight / elementHeight;
+
+      links.forEach((link) => {
+        const linkRect = link.getBoundingClientRect();
+        
+        // Calculate coordinates relative to the top-left of the resume container
+        const x = (linkRect.left - elementRect.left) * scaleX;
+        const y = (linkRect.top - elementRect.top) * scaleY;
+        const w = linkRect.width * scaleX;
+        const h = linkRect.height * scaleY;
+        
+        // Add the interactive link layer
+        pdf.link(x, y, w, h, { url: link.href });
       });
 
-      // Using the html method to preserve text layers and <a> tags
-      // This ensures text is selectable and links are functional
-      await pdf.html(element, {
-        callback: function (doc) {
-          doc.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-          toast.success('Text-based PDF with active links downloaded!', { id: toastId });
-          setIsExporting(false);
-        },
-        x: 0,
-        y: 0,
-        width: 210, // A4 width in mm
-        windowWidth: 800, // Fixed window width to maintain full-width layout and prevent shrinking
-        autoPaging: 'text',
-        html2canvas: {
-          scale: 1, // Text-based export doesn't need high scale like image flattening
-          useCORS: true,
-          letterRendering: true,
-          logging: false
-        }
-      });
+      pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
+      toast.success('Professional PDF exported with active hyperlinks!', { id: toastId });
     } catch (e) {
-      console.error(e);
-      toast.error('Export failed. Please try again.', { id: toastId });
+      console.error('PDF generation error:', e);
+      toast.error('Failed to generate PDF. Please try again.', { id: toastId });
+    } finally {
       setIsExporting(false);
     }
   };
@@ -69,18 +99,20 @@ export default function EditorPage() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
-            <Button variant="ghost" size="icon" onClick={() => setZoom(Math.max(0.4, zoom - 0.1))} className="w-7 h-7 text-slate-400"><ZoomOut className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setZoom(Math.max(0.4, zoom - 0.1))} className="text-slate-400"><ZoomOut className="w-4 h-4" /></Button>
             <span className="text-[10px] font-bold text-slate-500 w-8 text-center">{Math.round(zoom * 100)}%</span>
-            <Button variant="ghost" size="icon" onClick={() => setZoom(Math.min(1.5, zoom + 0.1))} className="w-7 h-7 text-slate-400"><ZoomIn className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setZoom(Math.min(1.5, zoom + 0.1))} className="text-slate-400"><ZoomIn className="w-4 h-4" /></Button>
           </div>
-          <Button onClick={handleExportPDF} disabled={isExporting} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-9 px-4 rounded-xl shadow-lg shadow-indigo-600/20">
+          <Button onClick={handleExportPDF} disabled={isExporting} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-9 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />} Export PDF
           </Button>
         </div>
       </header>
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-[400px] border-r border-slate-800 bg-slate-900/20 p-6 overflow-y-auto scrollbar-hide shrink-0"><ResumeForm /></aside>
-        <main className="flex-1 bg-slate-950 p-12 overflow-auto flex justify-center items-start">
+        <aside className="w-[400px] border-r border-slate-800 bg-slate-900/20 p-6 overflow-y-auto scrollbar-hide shrink-0 transition-all">
+          <ResumeForm />
+        </aside>
+        <main className="flex-1 bg-slate-950 p-12 overflow-auto flex justify-center items-start scroll-smooth">
           <div 
             className="shadow-2xl shadow-black/50 bg-white origin-top"
             style={{ 

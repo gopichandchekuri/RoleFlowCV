@@ -17,7 +17,7 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
       borderBottom: '1px solid #000000',
-      paddingBottom: '4px', // Prevents overlap with divider line
+      paddingBottom: '4px',
       marginBottom: '10px',
       marginTop: '14px',
       width: '100%'
