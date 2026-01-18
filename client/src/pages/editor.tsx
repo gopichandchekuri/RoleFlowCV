@@ -19,7 +19,7 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Generating full-width A4 PDF...');
+    const toastId = toast.loading('Generating high-quality PDF with active links...');
     
     try {
       const element = previewRef.current;
@@ -53,9 +53,31 @@ export default function EditorPage() {
       const pdfWidth = 210;
       const pdfHeight = 297;
       
+      // Add the image as the base layer
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // --- LINK PRESERVATION LOGIC ---
+      // We manually add link annotations over the image for functional hyperlinks
+      const links = element.querySelectorAll('a');
+      const rect = element.getBoundingClientRect();
+      const scaleX = pdfWidth / element.offsetWidth;
+      const scaleY = pdfHeight / element.offsetHeight;
+
+      links.forEach((link) => {
+        const linkRect = link.getBoundingClientRect();
+        const parentRect = element.getBoundingClientRect();
+        
+        // Calculate coordinates relative to the preview container
+        const x = (linkRect.left - parentRect.left) * scaleX;
+        const y = (linkRect.top - parentRect.top) * scaleY;
+        const w = linkRect.width * scaleX;
+        const h = linkRect.height * scaleY;
+        
+        pdf.link(x, y, w, h, { url: link.href });
+      });
+
       pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-      toast.success('PDF downloaded successfully!', { id: toastId });
+      toast.success('PDF with clickable links downloaded!', { id: toastId });
     } catch (e) {
       console.error(e);
       toast.error('Export failed. Please try again.', { id: toastId });
