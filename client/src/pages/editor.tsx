@@ -5,6 +5,7 @@ import ResumeForm from '@/components/resume/ResumeForm';
 import ResumePreview from '@/components/resume/ResumePreview';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, ZoomIn, ZoomOut, FileText, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 
@@ -18,40 +19,70 @@ export default function EditorPage() {
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    const toastId = toast.loading('Generating sharp PDF with active links...');
+    const toastId = toast.loading('Restoring professional PDF with active links...');
     
     try {
       const element = previewRef.current;
       
-      // jsPDF with html() method for native link and text support
+      // Temporarily remove transform for high-quality capture
+      const originalTransform = element.style.transform;
+      element.style.transform = 'none';
+      
+      // Get the bounding box of the element to calculate relative link positions
+      const elementRect = element.getBoundingClientRect();
+      const elementWidth = element.offsetWidth;
+      const elementHeight = element.offsetHeight;
+
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: elementWidth,
+        height: elementHeight
+      });
+      
+      // Restore transform immediately after capture
+      element.style.transform = originalTransform;
+      
+      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ 
         orientation: 'portrait', 
         unit: 'mm', 
         format: 'a4' 
       });
+      
+      // A4 dimensions in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      // Add the image base layer
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-      // Use the html method to preserve text layers and <a> tags
-      await pdf.html(element, {
-        callback: function (doc) {
-          doc.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
-          toast.success('PDF with active links downloaded!', { id: toastId });
-          setIsExporting(false);
-        },
-        x: 0,
-        y: 0,
-        width: 210, // A4 width in mm
-        windowWidth: 800, // Fixed window width to prevent shrinking and maintain layout
-        autoPaging: 'text',
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          logging: false
-        }
+      // --- HYPERLINK OVERLAY LOGIC ---
+      // Manually add clickable link annotations over the flattened image
+      const links = element.querySelectorAll('a');
+      const scaleX = pdfWidth / elementWidth;
+      const scaleY = pdfHeight / elementHeight;
+
+      links.forEach((link) => {
+        const linkRect = link.getBoundingClientRect();
+        
+        // Calculate coordinates relative to the preview container
+        const x = (linkRect.left - elementRect.left) * scaleX;
+        const y = (linkRect.top - elementRect.top) * scaleY;
+        const w = linkRect.width * scaleX;
+        const h = linkRect.height * scaleY;
+        
+        pdf.link(x, y, w, h, { url: link.href });
       });
+
+      pdf.save(`${resume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`);
+      toast.success('Professional PDF restored with active links!', { id: toastId });
     } catch (e) {
       console.error(e);
       toast.error('Export failed. Please try again.', { id: toastId });
+    } finally {
       setIsExporting(false);
     }
   };

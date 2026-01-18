@@ -17,7 +17,7 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
       borderBottom: '1px solid #000000',
-      paddingBottom: '4px',
+      paddingBottom: '4px', // Prevents overlap with divider line
       marginBottom: '10px',
       marginTop: '14px',
       width: '100%'
@@ -57,13 +57,13 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
             {personalInfo.linkedin && (
               <>
                 <span>•</span>
-                <span style={{ color: '#4f46e5' }}>{personalInfo.linkedin}</span>
+                <a href={`https://${personalInfo.linkedin.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', textDecoration: 'none' }}>{personalInfo.linkedin}</a>
               </>
             )}
             {personalInfo.website && (
               <>
                 <span>•</span>
-                <span style={{ color: '#4f46e5' }}>{personalInfo.website}</span>
+                <a href={`https://${personalInfo.website.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', textDecoration: 'none' }}>{personalInfo.website}</a>
               </>
             )}
           </div>
