@@ -8,7 +8,7 @@ interface ResumePreviewProps {
 
 const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
   ({ resume, scale = 1 }, ref) => {
-    const { personalInfo, summary, education, experience, certifications, skills } = resume;
+    const { personalInfo, summary, education, experience, projects, certifications, skills } = resume;
 
     const sectionHeadingStyle: React.CSSProperties = {
       fontSize: '13px',
@@ -93,6 +93,32 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
                 </div>
                 <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '10.5px', lineHeight: 1.4, listStyleType: 'disc' }}>
                   {exp.bullets.filter(b => b.trim() !== '').map((bullet, i) => <li key={i}>{bullet}</li>)}
+                </ul>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {projects && projects.length > 0 && (
+          <section style={{ width: '100%' }}>
+            <h2 style={sectionHeadingStyle}>Projects</h2>
+            {projects.map((project) => (
+              <div key={project.id} style={{ marginBottom: '12px', width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', width: '100%' }}>
+                  <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>
+                    {project.url ? (
+                      <a href={project.url} target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5', textDecoration: 'none' }}>
+                        {project.name}
+                      </a>
+                    ) : project.name}
+                  </h3>
+                  <div style={{ textAlign: 'right', fontSize: '10.5px', fontWeight: 600, color: '#64748b' }}>
+                    {project.location && <span>{project.location} | </span>}
+                    <span>{project.date}</span>
+                  </div>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '10.5px', lineHeight: 1.4, listStyleType: 'disc', marginTop: '4px' }}>
+                  {project.bullets.filter(b => b.trim() !== '').map((bullet, i) => <li key={i}>{bullet}</li>)}
                 </ul>
               </div>
             ))}

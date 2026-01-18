@@ -1,4 +1,4 @@
-import { useResume, Education, Experience, Certification } from '@/lib/resumeContext';
+import { useResume, Project } from '@/lib/resumeContext';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Plus, Trash2, User, Briefcase, GraduationCap, Award, Wrench } from 'lucide-react';
+import { Plus, Trash2, User, Briefcase, GraduationCap, Award, Wrench, FolderGit2 } from 'lucide-react';
 
 export default function ResumeForm() {
   const {
@@ -18,6 +18,7 @@ export default function ResumeForm() {
     updateSummary,
     updateEducation,
     updateExperience,
+    updateProjects,
     updateCertifications,
     updateSkills,
   } = useResume();
@@ -51,6 +52,38 @@ export default function ResumeForm() {
         return { ...exp, bullets: exp.bullets.filter((_, i) => i !== bulletIndex) };
       }
       return exp;
+    }));
+  };
+
+  const addProject = () => {
+    updateProjects([...(resume.projects || []), {
+      id: Date.now().toString(), name: '', url: '', location: '', date: '', bullets: ['']
+    }]);
+  };
+
+  const addProjectBullet = (projectId: string) => {
+    updateProjects(resume.projects.map(p => 
+      p.id === projectId ? { ...p, bullets: [...p.bullets, ''] } : p
+    ));
+  };
+
+  const updateProjectBullet = (projectId: string, bulletIndex: number, value: string) => {
+    updateProjects(resume.projects.map(p => {
+      if (p.id === projectId) {
+        const newBullets = [...p.bullets];
+        newBullets[bulletIndex] = value;
+        return { ...p, bullets: newBullets };
+      }
+      return p;
+    }));
+  };
+
+  const removeProjectBullet = (projectId: string, bulletIndex: number) => {
+    updateProjects(resume.projects.map(p => {
+      if (p.id === projectId) {
+        return { ...p, bullets: p.bullets.filter((_, i) => i !== bulletIndex) };
+      }
+      return p;
     }));
   };
 
@@ -135,6 +168,32 @@ export default function ResumeForm() {
               </div>
             ))}
             <Button onClick={addExperience} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Experience</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="projects" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><FolderGit2 className="w-5 h-5 mr-2 text-indigo-400" /> Projects</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            {(resume.projects || []).map((project, i) => (
+              <div key={project.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
+                <div className="flex justify-between items-center"><span className="text-indigo-400 font-bold text-xs">Project {i+1}</span><Button variant="ghost" size="icon" onClick={() => updateProjects(resume.projects.filter(p => p.id !== project.id))}><Trash2 className="w-4 h-4 text-red-400" /></Button></div>
+                <Input value={project.name} onChange={(e) => updateProjects(resume.projects.map(p => p.id === project.id ? {...p, name: e.target.value} : p))} placeholder="Project Name" className="border-slate-800" />
+                <Input value={project.url} onChange={(e) => updateProjects(resume.projects.map(p => p.id === project.id ? {...p, url: e.target.value} : p))} placeholder="Project URL" className="border-slate-800" />
+                <Input value={project.location} onChange={(e) => updateProjects(resume.projects.map(p => p.id === project.id ? {...p, location: e.target.value} : p))} placeholder="Location (e.g. Remote)" className="border-slate-800" />
+                <Input value={project.date} onChange={(e) => updateProjects(resume.projects.map(p => p.id === project.id ? {...p, date: e.target.value} : p))} placeholder="Date (e.g. Jan 2023 - Mar 2023)" className="border-slate-800" />
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-[10px] uppercase font-bold">Details</Label>
+                  {project.bullets.map((bullet, bIdx) => (
+                    <div key={bIdx} className="flex gap-2">
+                      <Input value={bullet} onChange={(e) => updateProjectBullet(project.id, bIdx, e.target.value)} placeholder={`Detail ${bIdx + 1}`} className="border-slate-800 flex-1" />
+                      <Button variant="ghost" size="icon" onClick={() => removeProjectBullet(project.id, bIdx)} disabled={project.bullets.length === 1} className="text-red-400"><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                  ))}
+                  <Button variant="ghost" size="sm" onClick={() => addProjectBullet(project.id)} className="text-indigo-400 text-[10px] h-6"><Plus className="w-3 h-3 mr-1" /> Add Detail</Button>
+                </div>
+              </div>
+            ))}
+            <Button onClick={addProject} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Project</Button>
           </AccordionContent>
         </AccordionItem>
 

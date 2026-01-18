@@ -21,6 +21,15 @@ export interface Experience {
   bullets: string[];
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  url?: string;
+  location: string;
+  date: string;
+  bullets: string[];
+}
+
 export interface Certification {
   id: string;
   name: string;
@@ -51,6 +60,7 @@ export interface ResumeData {
   summary: string;
   education: Education[];
   experience: Experience[];
+  projects: Project[];
   certifications: Certification[];
   skills: Skills;
 }
@@ -95,6 +105,19 @@ const defaultResume: ResumeData = {
       ],
     },
   ],
+  projects: [
+    {
+      id: '1',
+      name: 'OpenSource Portfolio Builder',
+      url: 'https://github.com/janderson/portfolio',
+      location: 'Personal Project',
+      date: 'Jan 2023 - Mar 2023',
+      bullets: [
+        'Built a high-performance resume builder using React and TailwindCSS',
+        'Implemented PDF export functionality using html2canvas and jsPDF',
+      ],
+    },
+  ],
   certifications: [
     {
       id: '1',
@@ -118,6 +141,7 @@ interface ResumeContextType {
   updateSummary: (summary: string) => void;
   updateEducation: (education: Education[]) => void;
   updateExperience: (experience: Experience[]) => void;
+  updateProjects: (projects: Project[]) => void;
   updateCertifications: (certifications: Certification[]) => void;
   updateSkills: (skills: Skills) => void;
   resumes: ResumeData[];
@@ -154,6 +178,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     setResume({ ...resume, experience });
   };
 
+  const updateProjects = (projects: Project[]) => {
+    setResume({ ...resume, projects });
+  };
+
   const updateCertifications = (certifications: Certification[]) => {
     setResume({ ...resume, certifications });
   };
@@ -175,6 +203,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         updateSummary,
         updateEducation,
         updateExperience,
+        updateProjects,
         updateCertifications,
         updateSkills,
         resumes,
