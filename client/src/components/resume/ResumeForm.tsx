@@ -115,8 +115,9 @@ export default function ResumeForm() {
             {resume.experience.map((exp, i) => (
               <div key={exp.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
                 <div className="flex justify-between items-center"><span className="text-indigo-400 font-bold text-xs">Job {i+1}</span><Button variant="ghost" size="icon" onClick={() => updateExperience(resume.experience.filter(e => e.id !== exp.id))}><Trash2 className="w-4 h-4 text-red-400" /></Button></div>
-                <Input value={exp.title} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, title: e.target.value} : x))} placeholder="Job Title" className="border-slate-800" />
                 <Input value={exp.company} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, company: e.target.value} : x))} placeholder="Company" className="border-slate-800" />
+                <Input value={exp.title} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, title: e.target.value} : x))} placeholder="Job Title" className="border-slate-800" />
+                <Input value={exp.location} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, location: e.target.value} : x))} placeholder="Location (City, State)" className="border-slate-800" />
                 <div className="grid grid-cols-2 gap-2">
                   <Input value={exp.startDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, startDate: e.target.value} : x))} placeholder="Start Date" className="border-slate-800" />
                   <Input value={exp.endDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, endDate: e.target.value} : x))} placeholder="End Date" className="border-slate-800" />
@@ -142,8 +143,11 @@ export default function ResumeForm() {
           <AccordionContent className="space-y-4 pt-4">
             {resume.education.map((edu, i) => (
               <div key={edu.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
-                <Input value={edu.school} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, school: e.target.value} : x))} placeholder="School" className="border-slate-800" />
+                <div className="flex justify-between items-center"><span className="text-indigo-400 font-bold text-xs">School {i+1}</span><Button variant="ghost" size="icon" onClick={() => updateEducation(resume.education.filter(e => e.id !== edu.id))}><Trash2 className="w-4 h-4 text-red-400" /></Button></div>
+                <Input value={edu.school} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, school: e.target.value} : x))} placeholder="School/University" className="border-slate-800" />
                 <Input value={edu.degree} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, degree: e.target.value} : x))} placeholder="Degree" className="border-slate-800" />
+                <Input value={edu.field} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, field: e.target.value} : x))} placeholder="Field of Study" className="border-slate-800" />
+                <Input value={edu.location} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, location: e.target.value} : x))} placeholder="Location (City, State)" className="border-slate-800" />
                 <div className="grid grid-cols-2 gap-2">
                   <Input value={edu.startDate} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, startDate: e.target.value} : x))} placeholder="Start Date" className="border-slate-800" />
                   <Input value={edu.endDate} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, endDate: e.target.value} : x))} placeholder="End Date" className="border-slate-800" />

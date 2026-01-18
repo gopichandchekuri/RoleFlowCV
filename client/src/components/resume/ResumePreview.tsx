@@ -17,9 +17,9 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
       borderBottom: '1px solid #000000',
-      paddingBottom: '4px',
-      marginBottom: '10px',
-      marginTop: '16px'
+      paddingBottom: '6px', // Increased padding to prevent overlap
+      marginBottom: '12px',
+      marginTop: '20px'
     };
 
     return (
@@ -29,7 +29,7 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         style={{
           width: '8.5in',
           minHeight: '11in',
-          padding: '0.5in', // Consistent 10mm+ margin (approx 0.5in)
+          padding: '0.5in',
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
           fontFamily: "'Inter', sans-serif",
@@ -38,7 +38,7 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         }}
         id="resume-preview"
       >
-        <header style={{ marginBottom: '20px' }}>
+        <header style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#000000', marginBottom: '4px', letterSpacing: '-0.02em' }}>
             {personalInfo.fullName}
           </h1>
@@ -77,14 +77,16 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           <section>
             <h2 style={sectionHeadingStyle}>Experience</h2>
             {experience.map((exp) => (
-              <div key={exp.id} style={{ marginBottom: '14px' }}>
+              <div key={exp.id} style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                  <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{exp.title}</h3>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textAlign: 'right' }}>{exp.startDate} — {exp.endDate}</span>
+                  <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{exp.company}</h3>
+                  <div style={{ textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#64748b' }}>
+                    {exp.location && <span>{exp.location} | </span>}
+                    <span>{exp.startDate} — {exp.endDate}</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#475569', marginBottom: '4px' }}>
-                  <span>{exp.company}</span>
-                  <span style={{ textAlign: 'right' }}>{exp.location}</span>
+                <div style={{ fontSize: '12px', color: '#475569', fontWeight: 600, marginBottom: '6px' }}>
+                  {exp.title}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', lineHeight: 1.5, listStyleType: 'disc' }}>
                   {exp.bullets.filter(b => b.trim() !== '').map((bullet, i) => <li key={i}>{bullet}</li>)}
@@ -98,10 +100,13 @@ const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           <section>
             <h2 style={sectionHeadingStyle}>Education</h2>
             {education.map((edu) => (
-              <div key={edu.id} style={{ marginBottom: '10px' }}>
+              <div key={edu.id} style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>{edu.school}</h3>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textAlign: 'right' }}>{edu.startDate} — {edu.endDate}</span>
+                  <div style={{ textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#64748b' }}>
+                    {edu.location && <span>{edu.location} | </span>}
+                    <span>{edu.startDate} — {edu.endDate}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#475569' }}>
                   <span>{edu.degree} in {edu.field}</span>
