@@ -9,8 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Plus, Trash2, User, Briefcase, GraduationCap, Award, Wrench, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plus, Trash2, User, Briefcase, GraduationCap, Award, Wrench } from 'lucide-react';
 
 export default function ResumeForm() {
   const {
@@ -21,122 +20,136 @@ export default function ResumeForm() {
     updateExperience,
     updateCertifications,
     updateSkills,
-    atsScore,
   } = useResume();
 
-  const mockOptimize = (expId: string, index: number) => {
-    toast.promise(new Promise(resolve => setTimeout(resolve, 1500)), {
-      loading: 'AI is analyzing and optimizing your achievement...',
-      success: () => {
-        const exp = resume.experience.find(e => e.id === expId);
-        if (exp) {
-          const newBullets = [...exp.bullets];
-          newBullets[index] = `Optimized: ${newBullets[index]} with measurable impact and 25% efficiency increase.`;
-          updateExperience(resume.experience.map(e => e.id === expId ? { ...e, bullets: newBullets } : e));
-        }
-        return 'Achievement optimized for ATS!';
-      },
-    });
-  };
-
   const addExperience = () => {
-    const newExp: Experience = {
-      id: Date.now().toString(),
-      company: '',
-      title: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      bullets: [''],
-    };
-    updateExperience([...resume.experience, newExp]);
+    updateExperience([...resume.experience, {
+      id: Date.now().toString(), company: '', title: '', location: '', startDate: '', endDate: '', bullets: ['']
+    }]);
   };
 
-  const updateExperienceItem = (id: string, field: keyof Experience, value: string | string[]) => {
-    updateExperience(resume.experience.map((exp) => exp.id === id ? { ...exp, [field]: value } : exp));
+  const addEducation = () => {
+    updateEducation([...resume.education, {
+      id: Date.now().toString(), school: '', degree: '', field: '', location: '', startDate: '', endDate: '', gpa: ''
+    }]);
   };
 
-  const removeExperience = (id: string) => {
-    updateExperience(resume.experience.filter((exp) => exp.id !== id));
+  const addCertification = () => {
+    updateCertifications([...resume.certifications, {
+      id: Date.now().toString(), name: '', issuer: '', date: '', url: ''
+    }]);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-sm font-bold text-white mb-1">ATS Strength</h3>
-          <p className="text-xs text-slate-500">How ready is your resume?</p>
-        </div>
-        <div className="relative w-16 h-16">
-          <svg className="w-full h-full transform -rotate-90">
-            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-800" />
-            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * atsScore) / 100} className="text-indigo-500 transition-all duration-1000" />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-white">{atsScore}%</span>
-        </div>
-      </div>
-
-      <Accordion type="single" collapsible defaultValue="personal" className="space-y-4">
-        <AccordionItem value="personal" className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-800/30">
-            <span className="flex items-center gap-4 text-white font-bold"><User className="w-5 h-5 text-indigo-400" /> Personal Info</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6 pt-2 space-y-4">
+    <div className="space-y-4">
+      <Accordion type="single" collapsible defaultValue="personal" className="w-full">
+        <AccordionItem value="personal" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><User className="w-5 h-5 mr-2 text-indigo-400" /> Personal Info</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Full Name</Label>
-                <Input value={resume.personalInfo.fullName} onChange={(e) => updatePersonalInfo({ fullName: e.target.value })} className="bg-slate-800/50 border-slate-700 text-white h-11 rounded-xl" />
+              <div className="col-span-2 space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Full Name</Label>
+                <Input value={resume.personalInfo.fullName} onChange={(e) => updatePersonalInfo({ fullName: e.target.value })} className="bg-slate-900 border-slate-800" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Email</Label>
-                <Input value={resume.personalInfo.email} onChange={(e) => updatePersonalInfo({ email: e.target.value })} className="bg-slate-800/50 border-slate-700 text-white h-11 rounded-xl" />
+              <div className="col-span-2 space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Professional Title</Label>
+                <Input value={resume.personalInfo.title} onChange={(e) => updatePersonalInfo({ title: e.target.value })} className="bg-slate-900 border-slate-800" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Phone</Label>
-                <Input value={resume.personalInfo.phone} onChange={(e) => updatePersonalInfo({ phone: e.target.value })} className="bg-slate-800/50 border-slate-700 text-white h-11 rounded-xl" />
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Email</Label>
+                <Input value={resume.personalInfo.email} onChange={(e) => updatePersonalInfo({ email: e.target.value })} className="bg-slate-900 border-slate-800" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Phone</Label>
+                <Input value={resume.personalInfo.phone} onChange={(e) => updatePersonalInfo({ phone: e.target.value })} className="bg-slate-900 border-slate-800" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">LinkedIn</Label>
+                <Input value={resume.personalInfo.linkedin} onChange={(e) => updatePersonalInfo({ linkedin: e.target.value })} className="bg-slate-900 border-slate-800" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">GitHub/Portfolio</Label>
+                <Input value={resume.personalInfo.website} onChange={(e) => updatePersonalInfo({ website: e.target.value })} className="bg-slate-900 border-slate-800" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Location</Label>
+                <Input value={resume.personalInfo.location} onChange={(e) => updatePersonalInfo({ location: e.target.value })} className="bg-slate-900 border-slate-800" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label className="text-slate-400 text-[10px] uppercase font-bold">Summary</Label>
+                <Textarea value={resume.summary} onChange={(e) => updateSummary(e.target.value)} className="bg-slate-900 border-slate-800 min-h-[100px]" />
               </div>
             </div>
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="experience" className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-800/30">
-            <span className="flex items-center gap-4 text-white font-bold"><Briefcase className="w-5 h-5 text-indigo-400" /> Experience</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6 pt-2 space-y-4">
-            {resume.experience.map((exp, expIdx) => (
-              <div key={exp.id} className="p-4 bg-slate-800/30 rounded-xl border border-slate-800/50 space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-[10px] font-black text-indigo-400 uppercase">Position {expIdx + 1}</span>
-                  <Button variant="ghost" size="icon" onClick={() => removeExperience(exp.id)} className="text-red-400"><Trash2 className="w-4 h-4" /></Button>
+        <AccordionItem value="experience" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><Briefcase className="w-5 h-5 mr-2 text-indigo-400" /> Experience</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            {resume.experience.map((exp, i) => (
+              <div key={exp.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
+                <div className="flex justify-between items-center"><span className="text-indigo-400 font-bold text-xs">Job {i+1}</span><Button variant="ghost" size="icon" onClick={() => updateExperience(resume.experience.filter(e => e.id !== exp.id))}><Trash2 className="w-4 h-4 text-red-400" /></Button></div>
+                <Input value={exp.title} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, title: e.target.value} : x))} placeholder="Job Title" className="border-slate-800" />
+                <Input value={exp.company} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, company: e.target.value} : x))} placeholder="Company" className="border-slate-800" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={exp.startDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, startDate: e.target.value} : x))} placeholder="Start Date" className="border-slate-800" />
+                  <Input value={exp.endDate} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, endDate: e.target.value} : x))} placeholder="End Date" className="border-slate-800" />
                 </div>
-                <Input value={exp.title} onChange={(e) => updateExperienceItem(exp.id, 'title', e.target.value)} placeholder="Job Title" className="bg-slate-800/50 border-slate-700 text-white h-11 rounded-xl" />
-                <div className="space-y-2">
-                  {exp.bullets.map((bullet, bIdx) => (
-                    <div key={bIdx} className="flex gap-2">
-                      <Input value={bullet} onChange={(e) => {
-                        const newBullets = [...exp.bullets];
-                        newBullets[bIdx] = e.target.value;
-                        updateExperienceItem(exp.id, 'bullets', newBullets);
-                      }} className="bg-slate-800/50 border-slate-700 text-white h-11 rounded-xl flex-1" />
-                      <Button onClick={() => mockOptimize(exp.id, bIdx)} variant="ghost" className="text-indigo-400 px-2 h-11"><Sparkles className="w-4 h-4" /></Button>
-                    </div>
-                  ))}
-                </div>
+                <Textarea value={exp.bullets.join('\n')} onChange={(e) => updateExperience(resume.experience.map(x => x.id === exp.id ? {...x, bullets: e.target.value.split('\n')} : x))} placeholder="Achievements (one per line)" className="border-slate-800" />
               </div>
             ))}
-            <Button onClick={addExperience} className="w-full bg-slate-800/50 border-dashed text-slate-400 hover:text-white"><Plus className="w-4 h-4 mr-2" /> Add Experience</Button>
+            <Button onClick={addExperience} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Experience</Button>
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="skills" className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-800/30">
-            <span className="flex items-center gap-4 text-white font-bold"><Wrench className="w-5 h-5 text-indigo-400" /> Skills</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6 pt-2 space-y-4">
-            <Textarea value={resume.skills.technical.join(', ')} onChange={(e) => updateSkills({ ...resume.skills, technical: e.target.value.split(',').map(s => s.trim()) })} placeholder="Technical Skills (comma separated)" className="bg-slate-800/50 border-slate-700 text-white min-h-[80px]" />
-            <Textarea value={resume.skills.tools.join(', ')} onChange={(e) => updateSkills({ ...resume.skills, tools: e.target.value.split(',').map(s => s.trim()) })} placeholder="Tools (comma separated)" className="bg-slate-800/50 border-slate-700 text-white min-h-[80px]" />
-            <Textarea value={resume.skills.soft.join(', ')} onChange={(e) => updateSkills({ ...resume.skills, soft: e.target.value.split(',').map(s => s.trim()) })} placeholder="Soft Skills (comma separated)" className="bg-slate-800/50 border-slate-700 text-white min-h-[80px]" />
+        <AccordionItem value="education" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><GraduationCap className="w-5 h-5 mr-2 text-indigo-400" /> Education</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            {resume.education.map((edu, i) => (
+              <div key={edu.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
+                <Input value={edu.school} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, school: e.target.value} : x))} placeholder="School" className="border-slate-800" />
+                <Input value={edu.degree} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, degree: e.target.value} : x))} placeholder="Degree" className="border-slate-800" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input value={edu.startDate} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, startDate: e.target.value} : x))} placeholder="Start Date" className="border-slate-800" />
+                  <Input value={edu.endDate} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, endDate: e.target.value} : x))} placeholder="End Date" className="border-slate-800" />
+                </div>
+                <Input value={edu.gpa} onChange={(e) => updateEducation(resume.education.map(x => x.id === edu.id ? {...x, gpa: e.target.value} : x))} placeholder="GPA" className="border-slate-800" />
+              </div>
+            ))}
+            <Button onClick={addEducation} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Education</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="certifications" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><Award className="w-5 h-5 mr-2 text-indigo-400" /> Certifications</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            {resume.certifications.map((cert) => (
+              <div key={cert.id} className="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-4">
+                <Input value={cert.name} onChange={(e) => updateCertifications(resume.certifications.map(x => x.id === cert.id ? {...x, name: e.target.value} : x))} placeholder="Certification Name" className="border-slate-800" />
+                <Input value={cert.issuer} onChange={(e) => updateCertifications(resume.certifications.map(x => x.id === cert.id ? {...x, issuer: e.target.value} : x))} placeholder="Issuing Organization" className="border-slate-800" />
+                <Input value={cert.date} onChange={(e) => updateCertifications(resume.certifications.map(x => x.id === cert.id ? {...x, date: e.target.value} : x))} placeholder="Month/Year" className="border-slate-800" />
+                <Input value={cert.url} onChange={(e) => updateCertifications(resume.certifications.map(x => x.id === cert.id ? {...x, url: e.target.value} : x))} placeholder="Credential URL" className="border-slate-800" />
+              </div>
+            ))}
+            <Button onClick={addCertification} variant="outline" className="w-full border-dashed border-slate-800 text-slate-400"><Plus className="w-4 h-4 mr-2" /> Add Certification</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="skills" className="border-slate-800">
+          <AccordionTrigger className="hover:no-underline text-white font-bold"><Wrench className="w-5 h-5 mr-2 text-indigo-400" /> Skills</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label className="text-slate-400 text-[10px] uppercase font-bold">Technical</Label>
+              <Textarea value={resume.skills.technical.join(', ')} onChange={(e) => updateSkills({...resume.skills, technical: e.target.value.split(', ')})} className="bg-slate-900 border-slate-800" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-400 text-[10px] uppercase font-bold">Tools</Label>
+              <Textarea value={resume.skills.tools.join(', ')} onChange={(e) => updateSkills({...resume.skills, tools: e.target.value.split(', ')})} className="bg-slate-900 border-slate-800" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-400 text-[10px] uppercase font-bold">Soft</Label>
+              <Textarea value={resume.skills.soft.join(', ')} onChange={(e) => updateSkills({...resume.skills, soft: e.target.value.split(', ')})} className="bg-slate-900 border-slate-800" />
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>

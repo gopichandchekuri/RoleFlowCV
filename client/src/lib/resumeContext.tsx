@@ -41,6 +41,7 @@ export interface ResumeData {
   templateId: string;
   personalInfo: {
     fullName: string;
+    title: string;
     email: string;
     phone: string;
     location: string;
@@ -60,11 +61,12 @@ const defaultResume: ResumeData = {
   templateId: '1',
   personalInfo: {
     fullName: 'John Anderson',
+    title: 'Senior Software Engineer',
     email: 'john.anderson@email.com',
     phone: '(555) 123-4567',
     location: 'San Francisco, CA',
     linkedin: 'linkedin.com/in/johnanderson',
-    website: 'johnanderson.dev',
+    website: 'github.com/janderson',
   },
   summary: 'Results-driven software engineer with 5+ years of experience building scalable web applications. Passionate about clean code, user experience, and mentoring junior developers.',
   education: [
@@ -98,7 +100,7 @@ const defaultResume: ResumeData = {
       id: '1',
       name: 'AWS Solutions Architect',
       issuer: 'Amazon Web Services',
-      date: '2023',
+      date: 'March 2023',
       url: 'https://aws.amazon.com/certification/',
     },
   ],
@@ -122,33 +124,15 @@ interface ResumeContextType {
   currentResumeId: string;
   setCurrentResumeId: (id: string) => void;
   applyTemplate: (templateId: string) => void;
-  atsScore: number;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
-  const [resumes, setResumes] = useState<ResumeData[]>([
-    defaultResume,
-    { ...defaultResume, id: '2', name: 'Technical Resume', templateId: '1' },
-    { ...defaultResume, id: '3', name: 'Creative Resume', templateId: '2' },
-  ]);
+  const [resumes, setResumes] = useState<ResumeData[]>([defaultResume]);
   const [currentResumeId, setCurrentResumeId] = useState('1');
 
   const resume = resumes.find((r) => r.id === currentResumeId) || defaultResume;
-
-  const calculateAtsScore = (data: ResumeData) => {
-    let score = 0;
-    if (data.personalInfo.fullName) score += 10;
-    if (data.personalInfo.email) score += 5;
-    if (data.summary) score += 15;
-    if (data.experience.length > 0) score += 30;
-    if (data.education.length > 0) score += 20;
-    if (data.skills.technical.length > 0) score += 20;
-    return Math.min(score, 100);
-  };
-
-  const atsScore = calculateAtsScore(resume);
 
   const setResume = (newResume: ResumeData) => {
     setResumes((prev) => prev.map((r) => (r.id === newResume.id ? newResume : r)));
@@ -197,7 +181,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         currentResumeId,
         setCurrentResumeId,
         applyTemplate,
-        atsScore,
       }}
     >
       {children}
