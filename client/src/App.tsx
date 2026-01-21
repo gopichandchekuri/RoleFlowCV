@@ -3,8 +3,11 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toast-wrapper";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/lib/authContext";
 import { ResumeProvider } from "@/lib/resumeContext";
+
+// Import Clerk's Auth hooks
+import { useAuth } from "@clerk/clerk-react";
+
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -14,23 +17,34 @@ import AIMatchPage from "@/pages/dashboard/ai-match";
 import EditorPage from "@/pages/editor";
 import SettingsPage from "@/pages/dashboard/settings";
 
+/**
+ * ProtectedRoute: Redirects to home/login if user is not signed in with Clerk.
+ */
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // Wait for Clerk to load before deciding to redirect
+  if (!isLoaded) return null; 
+
+  if (!isSignedIn) {
     return <Redirect to="/" />;
   }
-  
+
   return <Component />;
 }
 
+/**
+ * DashboardRoute: Wraps protected pages in the Dashboard sidebar/layout.
+ */
 function DashboardRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) return null;
+
+  if (!isSignedIn) {
     return <Redirect to="/" />;
   }
-  
+
   return (
     <DashboardLayout>
       <Component />
@@ -38,45 +52,61 @@ function DashboardRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+/**
+ * Router: Handles the page switching logic.
+ */
 function Router() {
-  const { isAuthenticated } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) return null;
 
   return (
     <Switch>
       <Route path="/">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <LoginPage />}
+        {/* If user is signed in, send them to dashboard automatically */}
+        {isSignedIn ? <Redirect to="/dashboard" /> : <LoginPage />}
       </Route>
+
       <Route path="/dashboard">
         <DashboardRoute component={MyResumesPage} />
       </Route>
+
       <Route path="/dashboard/templates">
         <DashboardRoute component={TemplatesPage} />
       </Route>
+
       <Route path="/dashboard/ai-match">
         <DashboardRoute component={AIMatchPage} />
       </Route>
+
       <Route path="/dashboard/settings/:category">
-        {(params) => <DashboardRoute component={() => <SettingsPage category={params.category} />} />}
+        {(params) => (
+          <DashboardRoute component={() => <SettingsPage category={params.category} />} />
+        )}
       </Route>
+
       <Route path="/editor">
         <ProtectedRoute component={EditorPage} />
       </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
 }
 
+/**
+ * Main App Component
+ */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ResumeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ResumeProvider>
-      </AuthProvider>
+      {/* We removed AuthProvider because ClerkProvider in main.tsx handles it now */}
+      <ResumeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ResumeProvider>
     </QueryClientProvider>
   );
 }
