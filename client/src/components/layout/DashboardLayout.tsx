@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useLocation, Link } from 'wouter';
-import { useAuth } from '@/lib/authContext';
+import { useUser, useClerk } from '@clerk/clerk-react';
+import { useResume } from '@/lib/resumeContext'; // Added this
 import { 
   FileText, 
   LayoutTemplate, 
@@ -15,7 +16,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,25 +40,27 @@ const navItems: NavItem[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const [location, setLocation] = useLocation();
-  const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { setCurrentResumeId } = useResume(); // Added for state management
 
-  const handleLogout = () => {
-    logout();
+  // Clerk hooks for user data and signout
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const handleLogout = async () => {
+    await signOut();
     setLocation('/');
     toast.info('Logged out successfully');
   };
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return location === '/dashboard' || location === '/dashboard/';
-    }
-    return location.startsWith(href);
+    return window.location.pathname === href;
   };
 
   return (
     <div className="min-h-screen bg-[#020617] flex">
+      {/* Sidebar */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900/40 backdrop-blur-2xl border-r border-slate-800/50 transform transition-transform duration-500 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -65,13 +68,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       >
         <div className="flex flex-col h-full">
           <div className="p-8">
-            <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
+            <Link 
+              href="/dashboard" 
+              className="flex items-center gap-4 group cursor-pointer"
+              onClick={() => setCurrentResumeId(null)} // Reset active resume when going home
+            >
               <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-600/20 group-hover:scale-110 transition-transform">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <div>
                 <span className="text-2xl font-black text-white tracking-tight">
-                  Resume<span className="text-indigo-400">Forge</span>
+                  RoleFlow<span className="text-indigo-400"> CV</span>
                 </span>
                 <span className="text-[10px] block text-slate-500 font-bold uppercase tracking-[0.2em]">Craft Station</span>
               </div>
@@ -84,20 +91,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer transition-all duration-300 group ${
+                onClick={() => {
+                  setSidebarOpen(false);
+                  if (item.href === '/dashboard') setCurrentResumeId(null);
+                }}
+              >
+                <div className={`flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer transition-all duration-300 group ${
                   isActive(item.href)
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                     : 'text-slate-400 hover:bg-slate-800/40 hover:text-white'
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span className={`p-2 rounded-xl transition-colors ${isActive(item.href) ? 'bg-white/10' : 'bg-slate-800/50 group-hover:text-indigo-400'}`}>
-                  {item.icon}
-                </span>
-                <span className="font-bold tracking-tight">{item.label}</span>
-                {isActive(item.href) && (
-                  <ChevronRight className="w-4 h-4 ml-auto opacity-50" />
-                )}
+                }`}>
+                  <span className={`p-2 rounded-xl transition-colors ${isActive(item.href) ? 'bg-white/10' : 'bg-slate-800/50 group-hover:text-indigo-400'}`}>
+                    {item.icon}
+                  </span>
+                  <span className="font-bold tracking-tight">{item.label}</span>
+                  {isActive(item.href) && (
+                    <ChevronRight className="w-4 h-4 ml-auto opacity-50" />
+                  )}
+                </div>
               </Link>
             ))}
           </nav>
@@ -106,13 +117,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div className="bg-slate-800/30 rounded-[2rem] p-4 border border-slate-800/50">
               <div className="flex items-center gap-4 px-2">
                 <Avatar className="w-12 h-12 border-2 border-indigo-500/20">
+                  <AvatarImage src={user?.imageUrl} />
                   <AvatarFallback className="bg-indigo-600/20 text-indigo-400 font-black text-lg">
-                    {user?.name?.charAt(0) || 'U'}
+                    {user?.firstName?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-white truncate">{user?.name || 'User'}</p>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase truncate">{user?.email || 'user@example.com'}</p>
+                  <p className="text-sm font-black text-white truncate">{user?.fullName || 'User'}</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase truncate">{user?.primaryEmailAddress?.emailAddress || 'user@example.com'}</p>
                 </div>
               </div>
             </div>
@@ -120,10 +132,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
+      {/* Main Content Area */}
       <div className="flex-1 lg:ml-72 flex flex-col">
         <header className="sticky top-0 z-30 bg-[#020617]/80 backdrop-blur-xl border-b border-slate-800/50">
           <div className="flex items-center justify-between px-6 lg:px-12 h-20">
@@ -147,8 +161,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-64 bg-slate-900 border-slate-800 rounded-2xl p-2 shadow-2xl">
                   <DropdownMenuLabel className="px-4 py-3">
                     <div className="flex flex-col gap-1">
-                      <span className="text-sm font-black text-white">{user?.name}</span>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{user?.email}</span>
+                      <span className="text-sm font-black text-white">{user?.fullName}</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{user?.primaryEmailAddress?.emailAddress}</span>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-slate-800" />
@@ -187,7 +201,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-6 lg:p-12">
+        <main className="flex-1 p-6 lg:p-12 bg-[#020617]">
           {children}
         </main>
       </div>

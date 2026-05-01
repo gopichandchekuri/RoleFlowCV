@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // The 'url' line is GONE now.
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  content   Json     
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

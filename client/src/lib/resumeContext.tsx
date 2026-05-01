@@ -1,226 +1,137 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-export interface Education {
-  id: string;
-  school: string;
-  degree: string;
-  field: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  gpa?: string;
-}
-
-export interface Experience {
-  id: string;
-  company: string;
-  title: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  bullets: string[];
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  url?: string;
-  location: string;
-  date: string;
-  bullets: string[];
-}
-
-export interface Certification {
-  id: string;
-  name: string;
-  issuer: string;
-  date: string;
-  url?: string;
-}
-
-export interface Skills {
-  technical: string[];
-  tools: string[];
-  soft: string[];
-}
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/clerk-react';
 
 export interface ResumeData {
-  id: string;
-  name: string;
-  templateId: string;
   personalInfo: {
-    fullName: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    linkedin?: string;
-    website?: string;
+    fullName: string; title: string; email: string; phone: string;
+    location: string; linkedin: string; website: string;
   };
   summary: string;
-  education: Education[];
-  experience: Experience[];
-  projects: Project[];
-  certifications: Certification[];
-  skills: Skills;
+  education: any[];
+  experience: any[];
+  projects: any[];
+  certifications: any[];
+  skills: { technical: string[]; tools: string[]; soft: string[]; };
 }
 
-const defaultResume: ResumeData = {
-  id: '1',
-  name: 'My Resume',
-  templateId: '1',
+export const ghostData: ResumeData = {
   personalInfo: {
-    fullName: 'John Anderson',
-    title: 'Senior Software Engineer',
-    email: 'john.anderson@email.com',
-    phone: '(555) 123-4567',
-    location: 'San Francisco, CA',
-    linkedin: 'linkedin.com/in/johnanderson',
-    website: 'github.com/janderson',
+    fullName: "John Doe",
+    title: "Senior Software Engineer",
+    email: "john.doe@example.com",
+    phone: "+1 (555) 000-0000",
+    location: "San Francisco, CA",
+    linkedin: "linkedin.com/in/johndoe",
+    website: "johndoe.dev"
   },
-  summary: 'Results-driven software engineer with 5+ years of experience building scalable web applications. Passionate about clean code, user experience, and mentoring junior developers.',
-  education: [
-    {
-      id: '1',
-      school: 'Stanford University',
-      degree: 'Master of Science',
-      field: 'Computer Science',
-      location: 'Stanford, CA',
-      startDate: '2016',
-      endDate: '2018',
-      gpa: '3.9',
-    },
-  ],
-  experience: [
-    {
-      id: '1',
-      company: 'Tech Corp Inc.',
-      title: 'Senior Software Engineer',
-      location: 'San Francisco, CA',
-      startDate: 'Jan 2021',
-      endDate: 'Present',
-      bullets: [
-        'Led development of microservices architecture serving 10M+ daily users',
-        'Reduced API response times by 40% through optimization and caching strategies',
-      ],
-    },
-  ],
-  projects: [
-    {
-      id: '1',
-      name: 'OpenSource Portfolio Builder',
-      url: 'https://github.com/janderson/portfolio',
-      location: 'Personal Project',
-      date: 'Jan 2023 - Mar 2023',
-      bullets: [
-        'Built a high-performance resume builder using React and TailwindCSS',
-        'Implemented PDF export functionality using html2canvas and jsPDF',
-      ],
-    },
-  ],
-  certifications: [
-    {
-      id: '1',
-      name: 'AWS Solutions Architect',
-      issuer: 'Amazon Web Services',
-      date: 'March 2023',
-      url: 'https://aws.amazon.com/certification/',
-    },
-  ],
-  skills: {
-    technical: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Go'],
-    tools: ['AWS', 'Docker', 'Kubernetes', 'PostgreSQL', 'Redis', 'Git'],
-    soft: ['Leadership', 'Communication', 'Problem Solving', 'Agile', 'Mentoring'],
-  },
+  summary: "Accomplished Software Engineer with 8+ years of experience in full-stack development. Proven track record of scaling distributed systems and leading cross-functional teams.",
+  education: [{ id: 'g1', school: "Tech Institute of Technology", degree: "B.S.", field: "Computer Science", location: "Boston, MA", startDate: "2012", endDate: "2016" }],
+  experience: [{ id: 'g1', company: "Global Tech Corp", title: "Lead Developer", location: "Remote", startDate: "2018", endDate: "Present", bullets: ["Modernized legacy architecture using microservices.", "Managed a team of 12 engineers."] }],
+  projects: [{ id: 'g1', name: "Open Source AI", url: "github.com/ai", location: "", date: "2023", bullets: ["Built a custom LLM interface."] }],
+  certifications: [{ id: 'g1', name: "Google Cloud Architect", issuer: "Google", date: "2022", url: "" }],
+  skills: { technical: ["React", "Go", "Kubernetes"], tools: ["Docker", "Terraform"], soft: ["Mentorship", "Public Speaking"] }
+};
+
+const emptyResume: ResumeData = {
+  personalInfo: { fullName: '', title: '', email: '', phone: '', location: '', linkedin: '', website: '' },
+  summary: '', education: [], experience: [], projects: [], certifications: [],
+  skills: { technical: [], tools: [], soft: [] }
 };
 
 interface ResumeContextType {
   resume: ResumeData;
-  setResume: (resume: ResumeData) => void;
-  updatePersonalInfo: (info: Partial<ResumeData['personalInfo']>) => void;
+  resumes: any[];
+  setResume: React.Dispatch<React.SetStateAction<ResumeData>>;
+  saveResumeToDb: () => Promise<void>;
+  isLoading: boolean;
+  currentResumeId: string | null;
+  setCurrentResumeId: (id: string | null) => void;
+  updatePersonalInfo: (data: Partial<ResumeData['personalInfo']>) => void;
   updateSummary: (summary: string) => void;
-  updateEducation: (education: Education[]) => void;
-  updateExperience: (experience: Experience[]) => void;
-  updateProjects: (projects: Project[]) => void;
-  updateCertifications: (certifications: Certification[]) => void;
-  updateSkills: (skills: Skills) => void;
-  resumes: ResumeData[];
-  currentResumeId: string;
-  setCurrentResumeId: (id: string) => void;
-  applyTemplate: (templateId: string) => void;
+  updateSection: (section: keyof ResumeData, data: any) => void;
+  updateEducation: (data: any[]) => void;
+  updateExperience: (data: any[]) => void;
+  updateProjects: (data: any[]) => void;
+  updateCertifications: (data: any[]) => void;
+  updateSkills: (data: Partial<ResumeData['skills']>) => void;
 }
 
-const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
+export const ResumeContext = createContext<ResumeContextType | null>(null);
 
-export function ResumeProvider({ children }: { children: ReactNode }) {
-  const [resumes, setResumes] = useState<ResumeData[]>([defaultResume]);
-  const [currentResumeId, setCurrentResumeId] = useState('1');
+export function ResumeProvider({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+  const [resume, setResume] = useState<ResumeData>(emptyResume);
+  const [resumesList, setResumesList] = useState<any[]>([]);
+  const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const resume = resumes.find((r) => r.id === currentResumeId) || defaultResume;
+  const updateSection = useCallback((section: keyof ResumeData, data: any) => {
+    setResume(prev => ({ ...prev, [section]: data }));
+  }, []);
 
-  const setResume = (newResume: ResumeData) => {
-    setResumes((prev) => prev.map((r) => (r.id === newResume.id ? newResume : r)));
+  const updatePersonalInfo = (data: Partial<ResumeData['personalInfo']>) => updateSection('personalInfo', { ...resume.personalInfo, ...data });
+  const updateSummary = (summary: string) => updateSection('summary', summary);
+  const updateEducation = (data: any[]) => updateSection('education', data);
+  const updateExperience = (data: any[]) => updateSection('experience', data);
+  const updateProjects = (data: any[]) => updateSection('projects', data);
+  const updateCertifications = (data: any[]) => updateSection('certifications', data);
+  const updateSkills = (data: Partial<ResumeData['skills']>) => {
+    setResume(prev => ({ ...prev, skills: { ...prev.skills, ...data } }));
   };
 
-  const updatePersonalInfo = (info: Partial<ResumeData['personalInfo']>) => {
-    setResume({ ...resume, personalInfo: { ...resume.personalInfo, ...info } });
-  };
+  useEffect(() => {
+    if (isLoaded && user) {
+      setIsLoading(true);
+      fetch(`/api/resumes?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setResumesList(data);
+          if (data && data.length > 0) {
+            const active = currentResumeId ? data.find((r: any) => r.id.toString() === currentResumeId) : data[0];
+            if (active) setResume(active.content);
+          }
+        }).finally(() => { setIsLoading(false); setIsInitialLoad(false); });
+    }
+  }, [user, isLoaded, currentResumeId]);
 
-  const updateSummary = (summary: string) => {
-    setResume({ ...resume, summary });
-  };
+  const saveResumeToDb = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      await fetch('/api/resumes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, content: resume }),
+      });
+      const updatedData = await fetch(`/api/resumes?userId=${user.id}`).then(res => res.json());
+      setResumesList(updatedData);
+    } finally { setIsLoading(false); }
+  }, [resume, user]);
 
-  const updateEducation = (education: Education[]) => {
-    setResume({ ...resume, education });
-  };
+  useEffect(() => {
+    if (isInitialLoad) return;
+    const timer = setTimeout(() => {
+      if (user && resume.personalInfo.fullName) saveResumeToDb();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [resume, user, isInitialLoad, saveResumeToDb]);
 
-  const updateExperience = (experience: Experience[]) => {
-    setResume({ ...resume, experience });
-  };
-
-  const updateProjects = (projects: Project[]) => {
-    setResume({ ...resume, projects });
-  };
-
-  const updateCertifications = (certifications: Certification[]) => {
-    setResume({ ...resume, certifications });
-  };
-
-  const updateSkills = (skills: Skills) => {
-    setResume({ ...resume, skills });
-  };
-
-  const applyTemplate = (templateId: string) => {
-    setResume({ ...resume, templateId });
-  };
+  const formattedResumes = resumesList.length > 0 ? resumesList.map(r => ({ ...r.content, dbId: r.id })) : [resume];
 
   return (
-    <ResumeContext.Provider
-      value={{
-        resume,
-        setResume,
-        updatePersonalInfo,
-        updateSummary,
-        updateEducation,
-        updateExperience,
-        updateProjects,
-        updateCertifications,
-        updateSkills,
-        resumes,
-        currentResumeId,
-        setCurrentResumeId,
-        applyTemplate,
-      }}
-    >
+    <ResumeContext.Provider value={{ 
+      resume, resumes: formattedResumes, setResume, saveResumeToDb, isLoading, 
+      currentResumeId, setCurrentResumeId, updatePersonalInfo, updateSummary, updateSection,
+      updateEducation, updateExperience, updateProjects, updateCertifications, updateSkills
+    }}>
       {children}
     </ResumeContext.Provider>
   );
 }
 
-export function useResume() {
+export const useResume = () => {
   const context = useContext(ResumeContext);
-  if (context === undefined) {
-    throw new Error('useResume must be used within a ResumeProvider');
-  }
+  if (!context) throw new Error("useResume must be used within a ResumeProvider");
   return context;
-}
+};

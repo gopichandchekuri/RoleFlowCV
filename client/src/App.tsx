@@ -1,12 +1,14 @@
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toast-wrapper";
+import { Toaster } from "sonner"; 
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ResumeProvider } from "@/lib/resumeContext";
 
 // Import Clerk's Auth hooks
 import { useAuth } from "@clerk/clerk-react";
+
+// Import your Resume Provider
+import { ResumeProvider } from "@/lib/resumeContext";
 
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
@@ -23,7 +25,6 @@ import SettingsPage from "@/pages/dashboard/settings";
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isSignedIn, isLoaded } = useAuth();
 
-  // Wait for Clerk to load before deciding to redirect
   if (!isLoaded) return null; 
 
   if (!isSignedIn) {
@@ -63,7 +64,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/">
-        {/* If user is signed in, send them to dashboard automatically */}
         {isSignedIn ? <Redirect to="/dashboard" /> : <LoginPage />}
       </Route>
 
@@ -100,13 +100,15 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* We removed AuthProvider because ClerkProvider in main.tsx handles it now */}
-      <ResumeProvider>
-        <TooltipProvider>
-          <Toaster />
+      <TooltipProvider>
+        <Toaster position="top-center" richColors closeButton />
+        {/* Crucial Fix: ResumeProvider must wrap the Router 
+            but stay inside the Clerk context (which is usually in main.tsx)
+        */}
+        <ResumeProvider>
           <Router />
-        </TooltipProvider>
-      </ResumeProvider>
+        </ResumeProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
